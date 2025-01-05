@@ -1,137 +1,103 @@
-// Integration of Google map in React Native using react-native-maps
-// https://aboutreact.com/react-native-map-example/
-// Import React
-import React from 'react';
-// Import required components
-import {SafeAreaView, StyleSheet, View} from 'react-native';
-// Import Map and Marker
-import MapView, {Marker} from 'react-native-maps';
-const App = () => {
+import React, { useState } from 'react';
+import { SafeAreaView, StyleSheet, View, TextInput } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import MapViewDirections from 'react-native-maps-directions';
+
+const App: React.FC = () => {
+  const [origin, setOrigin] = useState<{ latitude: number; longitude: number }>({
+    latitude: 12.9716,
+    longitude: 77.5946,
+  });
+  const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  const GOOGLE_MAPS_APIKEY = 'AIzaSyBoK5kmcGEn9UKw7YclW6xeNiHUfJf9IDE'; // Add your API Key here
+
+  const handleDestinationSubmit = (lat: string, lng: string) => {
+    setDestination({
+      latitude: parseFloat(lat),
+      longitude: parseFloat(lng),
+    });
+  };
+
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
         <MapView
           style={styles.mapStyle}
           initialRegion={{
-            latitude: 17.78825,
-            longitude: -278.4324,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0428,
-          }}
-          customMapStyle={mapStyle}>
+            latitude: origin.latitude,
+            longitude: origin.longitude,
+            latitudeDelta: 12.910,
+            longitudeDelta: 77.588,
+          }}>
           <Marker
-            draggable
-            coordinate={{
-              latitude: 17.78825,
-              longitude: -278.4324,
-            }}
-            onDragEnd={
-              (e) => alert(JSON.stringify(e.nativeEvent.coordinate))
-            }
-            title={'Test Marker'}
-            description={'This is a description of the marker'}
+            coordinate={origin}
+            title={'Origin'}
+            description={'This is the starting point'}
           />
+          {destination && (
+            <>
+              <Marker
+                coordinate={destination}
+                title={'Destination'}
+                description={'This is the destination'}
+              />
+              <MapViewDirections
+                origin={origin}
+                destination={destination}
+                apikey={GOOGLE_MAPS_APIKEY}
+                strokeWidth={3}
+                strokeColor="hotpink"
+              />
+            </>
+          )}
         </MapView>
+        <View style={styles.inputContainer}>
+          <TextInput
+            placeholder="Enter Destination Latitude"
+            style={styles.input}
+            keyboardType="numeric"
+            onChangeText={(text) => handleDestinationSubmit(text, destination?.longitude?.toString() || '')}
+          />
+          <TextInput
+            placeholder="Enter Destination Longitude"
+            style={styles.input}
+            keyboardType="numeric"
+            onChangeText={(text) => handleDestinationSubmit(destination?.latitude?.toString() || '', text)}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
 };
+
 export default App;
-const mapStyle = [
-  {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
-  {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
-  {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
-  {
-    featureType: 'administrative.locality',
-    elementType: 'labels.text.fill',
-    stylers: [{color: '#d59563'}],
-  },
-  {
-    featureType: 'poi',
-    elementType: 'labels.text.fill',
-    stylers: [{color: '#d59563'}],
-  },
-  {
-    featureType: 'poi.park',
-    elementType: 'geometry',
-    stylers: [{color: '#263c3f'}],
-  },
-  {
-    featureType: 'poi.park',
-    elementType: 'labels.text.fill',
-    stylers: [{color: '#6b9a76'}],
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry',
-    stylers: [{color: '#38414e'}],
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry.stroke',
-    stylers: [{color: '#212a37'}],
-  },
-  {
-    featureType: 'road',
-    elementType: 'labels.text.fill',
-    stylers: [{color: '#9ca5b3'}],
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry',
-    stylers: [{color: '#746855'}],
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry.stroke',
-    stylers: [{color: '#1f2835'}],
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'labels.text.fill',
-    stylers: [{color: '#f3d19c'}],
-  },
-  {
-    featureType: 'transit',
-    elementType: 'geometry',
-    stylers: [{color: '#2f3948'}],
-  },
-  {
-    featureType: 'transit.station',
-    elementType: 'labels.text.fill',
-    stylers: [{color: '#d59563'}],
-  },
-  {
-    featureType: 'water',
-    elementType: 'geometry',
-    stylers: [{color: '#17263c'}],
-  },
-  {
-    featureType: 'water',
-    elementType: 'labels.text.fill',
-    stylers: [{color: '#515c6d'}],
-  },
-  {
-    featureType: 'water',
-    elementType: 'labels.text.stroke',
-    stylers: [{color: '#17263c'}],
-  },
-];
+
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
   mapStyle: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  inputContainer: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: 10,
+    width: '90%',
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 10,
+    elevation: 5,
+    alignItems: 'center',
+  },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    width: '100%',
+    marginBottom: 10,
+    paddingHorizontal: 10,
   },
 });
