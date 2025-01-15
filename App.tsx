@@ -1,26 +1,25 @@
-import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, View, TextInput, Button, Alert, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { SafeAreaView, StyleSheet, View, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import axios from 'axios';
 import * as Location from 'expo-location';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 
-
 const App: React.FC = () => {
-  const [origin, setOrigin] = useState<{ latitude: number; longitude: number }>({
-    latitude: 12.9716,
-    longitude: 77.5946,
-  });
+  const [origin, setOrigin] = useState<{ latitude: number; longitude: number } | null>(null);
   const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null);
   const [destinationPlace, setDestinationPlace] = useState<string>('');
-  const [region, setRegion] = useState({ 
-    latitude: 12.9716, 
-    longitude: 77.5946, 
-    latitudeDelta: 0.0922, 
-    longitudeDelta: 0.0428});
+  const [region, setRegion] = useState({
+    latitude: 12.9716,
+    longitude: 77.5946,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0428,
+  });
 
-  const GOOGLE_MAPS_APIKEY = 'AIzaSyBoK5kmcGEn9UKw7YclW6xeNiHUfJf9IDEnpx'; // Add your API Key here
+  const mapRef = useRef<MapView>(null);
+
+  const GOOGLE_MAPS_APIKEY = 'AIzaSyBoK5kmcGEn9UKw7YclW6xeNiHUfJf9IDE'; // Add your API Key here
 
   const fetchDestinationCoordinates = async () => {
     try {
@@ -39,42 +38,53 @@ const App: React.FC = () => {
     }
   };
 
-  const getCurrentLocation = async () => 
-    { 
-      try { 
-      let { status } = await Location.requestForegroundPermissionsAsync(); 
+  const getCurrentLocation = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission to access location was denied'); 
+        Alert.alert('Permission to access location was denied');
         return;
-       } 
-       let location = await Location.getCurrentPositionAsync({}); 
-       const { latitude, longitude } = location.coords; 
-       setOrigin({ latitude, longitude }); 
-       setRegion({ 
-        latitude: latitude, 
-        longitude: longitude, 
-        latitudeDelta: 0.0922, 
-        longitudeDelta: 0.0428, }); 
-        Alert.alert('Location fetched', `Latitude: ${latitude}, Longitude: ${longitude}`); 
-      } 
-      catch (error) 
-      { 
-        Alert.alert('Error fetching location', error.message); 
       }
+      let location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+      setOrigin({ latitude, longitude });
+      const newRegion = {
+        latitude: latitude,
+        longitude: longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0428,
+      };
+      setRegion(newRegion);
+
+      // Animate the map to the new region
+      mapRef.current?.animateToRegion(newRegion, 1000);
+      Alert.alert('Location fetched', `Latitude: ${latitude}, Longitude: ${longitude}`);
+    } catch (error) {
+      Alert.alert('Error fetching location', error.message);
+    }
   };
+
+  // Fetch current location when the component mounts
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
         <MapView
+          ref={mapRef}
           style={styles.mapStyle}
-          region={region} 
-          onRegionChangeComplete={setRegion}>
-          <Marker
-            coordinate={origin}
-            title={'Origin'}
-            description={'This is the starting point'}
-          />
+          region={region}
+          onRegionChangeComplete={setRegion}
+        >
+          {origin && (
+            <Marker
+              coordinate={origin}
+              title={'Origin'}
+              description={'This is the starting point'}
+            />
+          )}
           {destination && (
             <>
               <Marker
@@ -102,12 +112,13 @@ const App: React.FC = () => {
             title="Get Directions"
             onPress={fetchDestinationCoordinates}
           />
-          
         </View>
-        <TouchableOpacity style={styles.locationButton} 
-          onPress={getCurrentLocation}> 
+        <TouchableOpacity
+          style={styles.locationButton}
+          onPress={getCurrentLocation}
+        >
           <FontAwesome6 name="location-crosshairs" size={24} color="black" />
-             </TouchableOpacity>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -144,36 +155,13 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     paddingHorizontal: 10,
   },
-  signInButtonContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 25,
-    //backgroundColor: "purple"
-},
-signIn: {
-    color: "#262626",
-    fontSize: 25,
-    fontWeight: "bold",
-    textAlign: "center",
-    backgroundColor : "#D8BFD8",
-},
-arrowContainer : {
-},
-signInWrapper: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    backgroundColor: "#D8BFD8", 
-    height: 50,
-    paddingHorizontal: 15, 
-    borderRadius: 50, 
-},
-locationButton: { 
-  position: 'absolute', 
-  bottom: 20, 
-  right: 20, 
-  backgroundColor: '#D8BFD8', 
-  borderRadius: 50, 
-  padding: 10, 
-  elevation: 5, 
-},
+  locationButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#D8BFD8',
+    borderRadius: 50,
+    padding: 10,
+    elevation: 5,
+  },
 });
