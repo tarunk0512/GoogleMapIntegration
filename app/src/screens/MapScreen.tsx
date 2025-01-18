@@ -9,8 +9,8 @@ import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 
 const MapScreen: React.FC = () => {
   const [origin, setOrigin] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [destinationPlace, setDestinationPlace] = useState<string>('');
+  const [destinations, setDestinations] = useState<{ latitude: number; longitude: number }[]>([]);
+  const [destinationInputs, setDestinationInputs] = useState<string[]>(['', '', '']);
   const [region, setRegion] = useState({
     latitude: 12.9716,
     longitude: 77.5946,
@@ -24,16 +24,18 @@ const MapScreen: React.FC = () => {
 
   const fetchDestinationCoordinates = async () => {
     try {
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(destinationPlace)}&key=${GOOGLE_MAPS_APIKEY}`
-      );
+      const newDestinations: { latitude: number; longitude: number }[] = [];
+      for (const place of destinationInputs) {
+        if (place.trim() !== '') {
+          const response = await axios.get(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(place)}&key=${GOOGLE_MAPS_APIKEY}`
+          );
 
-      const { lat, lng } = response.data.results[0].geometry.location;
-
-      setDestination({
-        latitude: lat,
-        longitude: lng,
-      });
+          const { lat, lng } = response.data.results[0].geometry.location;
+          newDestinations.push({ latitude: lat, longitude: lng });
+        }
+      }
+      setDestinations(newDestinations);
     } catch (error) {
       console.error('Error fetching destination coordinates:', error);
     }
@@ -58,7 +60,13 @@ const MapScreen: React.FC = () => {
       setRegion(newRegion);
 
       // Animate the map to the new region
-      mapRef.current?.animateToRegion(newRegion, 1000);
+      mapRef.current?.animateCamera({
+        center: {
+          latitude,
+          longitude,
+        },
+        zoom: 15, // Adjust the zoom level as needed
+      }, { duration: 1000 });
       Alert.alert('Location fetched', `Latitude: ${latitude}, Longitude: ${longitude}`);
     } catch (error) {
       Alert.alert('Error fetching location', error.message);
@@ -82,35 +90,45 @@ const MapScreen: React.FC = () => {
           {origin && (
             <Marker
               coordinate={origin}
-              title={'Origin'}
+              title={'1: Origin'}
               description={'This is the starting point'}
             />
           )}
-          {destination && (
-            <>
+          {destinations.map((destination, index) => (
               <Marker
+                key={index}
                 coordinate={destination}
-                title={'Destination'}
-                description={'This is the destination'}
+                title={`${index + 2}: Destination`}
+                description={`This is destination ${index + 1}`}
               />
+            ))}
+           {origin && destinations.length > 0 && (
               <MapViewDirections
                 origin={origin}
-                destination={destination}
+                waypoints={destinations.slice(0, -1)}
+                destination={destinations[destinations.length - 1]}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
                 strokeColor="blue"
               />
-            </>
-          )}
+            )}
         </MapView>
         <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="Enter The Destination"
-            style={styles.input}
-            onChangeText={(text) => setDestinationPlace(text)}
-          />
+            {destinationInputs.map((input, index) => (
+              <TextInput
+                key={index}
+                placeholder={`Enter Destination ${index + 1}`}
+                style={styles.input}
+                value={input}
+                onChangeText={(text) => {
+                  const newInputs = [...destinationInputs];
+                  newInputs[index] = text;
+                  setDestinationInputs(newInputs);
+                }}
+              />
+            ))}
           <Button
-            title="Get Directions"
+            title="Add Destination"
             onPress={fetchDestinationCoordinates}
           />
         </View>
