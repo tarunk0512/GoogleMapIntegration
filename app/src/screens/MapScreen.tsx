@@ -1,6 +1,6 @@
 // MapScreen.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { SafeAreaView, StyleSheet, View, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
+import { SafeAreaView, StyleSheet, View, TextInput, Button, Alert, TouchableOpacity, Animated } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import axios from 'axios';
@@ -16,9 +16,10 @@ const MapScreen: React.FC = () => {
     longitude: 77.5946,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0428,
-  });
-
-  const mapRef = useRef<MapView>(null);
+}); 
+const [isDialogVisible, setIsDialogVisible] = useState<boolean>(true); 
+const mapRef = useRef<MapView>(null); 
+const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height for the dialog
 
   const GOOGLE_MAPS_APIKEY = 'AIzaSyBoK5kmcGEn9UKw7YclW6xeNiHUfJf9IDE'; // Add your API Key here
 
@@ -77,6 +78,15 @@ const MapScreen: React.FC = () => {
   useEffect(() => {
     getCurrentLocation();
   }, []);
+  const toggleDialog = () => {
+    const toValue = isDialogVisible ? 0 : 200; // Collapse to 0 or expand to 200
+    Animated.timing(dialogHeight, {
+      toValue,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+    setIsDialogVisible(!isDialogVisible);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -113,25 +123,35 @@ const MapScreen: React.FC = () => {
               />
             )}
         </MapView>
-        <View style={styles.inputContainer}>
-            {destinationInputs.map((input, index) => (
-              <TextInput
-                key={index}
-                placeholder={`Enter Destination ${index + 1}`}
-                style={styles.input}
-                value={input}
-                onChangeText={(text) => {
-                  const newInputs = [...destinationInputs];
-                  newInputs[index] = text;
-                  setDestinationInputs(newInputs);
-                }}
+        <Animated.View style={[styles.inputContainer, { height: dialogHeight }]}>
+          {isDialogVisible && (
+            <View>
+              {destinationInputs.map((input, index) => (
+                <TextInput
+                  key={index}
+                  placeholder={`Enter Destination ${index + 1}`}
+                  style={styles.input}
+                  value={input}
+                  onChangeText={(text) => {
+                    const newInputs = [...destinationInputs];
+                    newInputs[index] = text;
+                    setDestinationInputs(newInputs);
+                  }}
+                />
+              ))}
+              <Button
+                title="Add Destination"
+                onPress={fetchDestinationCoordinates}
               />
-            ))}
-          <Button
-            title="Add Destination"
-            onPress={fetchDestinationCoordinates}
-          />
-        </View>
+            </View>
+          )}
+        </Animated.View>
+        <TouchableOpacity
+          style={styles.toggleButton}
+          onPress={toggleDialog}
+        >
+          <FontAwesome6 name={isDialogVisible ? "chevron-up" : "chevron-down"} size={24} color="black" />
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.locationButton}
           onPress={getCurrentLocation}
@@ -154,6 +174,14 @@ const styles = StyleSheet.create({
   mapStyle: {
     ...StyleSheet.absoluteFillObject,
   },
+  toggleButton: { position: 'absolute',
+    top: 5, 
+    right: 10,
+    backgroundColor: '#D8BFD8',
+    borderRadius: 20, 
+    padding: 10, 
+    elevation: 5,
+},
   inputContainer: {
     position: 'absolute',
     top: 10,
