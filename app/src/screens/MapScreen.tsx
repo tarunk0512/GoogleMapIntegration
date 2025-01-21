@@ -1,11 +1,11 @@
-// MapScreen.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { SafeAreaView, StyleSheet, View, TextInput, Button, Alert, TouchableOpacity, Animated } from 'react-native';
+import { SafeAreaView, StyleSheet, View, TextInput, Button, Alert, TouchableOpacity,Animated } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import axios from 'axios';
 import * as Location from 'expo-location';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import CustomMarker from '../Components/CustomMarker'; 
 
 const MapScreen: React.FC = () => {
   const [origin, setOrigin] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -41,6 +41,16 @@ const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height 
       console.error('Error fetching destination coordinates:', error);
     }
   };
+  const toggleDialog = () => {
+    const toValue = isDialogVisible ? 0 : 200; // Collapse to 0 or expand to 200
+    Animated.timing(dialogHeight, {
+      toValue,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+    setIsDialogVisible(!isDialogVisible);
+  };
+
 
   const getCurrentLocation = async () => {
     try {
@@ -78,15 +88,6 @@ const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height 
   useEffect(() => {
     getCurrentLocation();
   }, []);
-  const toggleDialog = () => {
-    const toValue = isDialogVisible ? 0 : 200; // Collapse to 0 or expand to 200
-    Animated.timing(dialogHeight, {
-      toValue,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-    setIsDialogVisible(!isDialogVisible);
-  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -100,9 +101,10 @@ const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height 
           {origin && (
             <Marker
               coordinate={origin}
-              title={'1: Origin'}
-              description={'This is the starting point'}
-            />
+              title={'Origin'}
+              description={'This is the starting point'}>
+                <CustomMarker source={require('./../../../assets/current_location_marker.png')} />
+              </Marker>            
           )}
           {destinations.map((destination, index) => (
               <Marker
