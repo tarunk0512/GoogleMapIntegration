@@ -77,7 +77,7 @@ const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height 
           latitude,
           longitude,
         },
-        zoom: 15, // Adjust the zoom level as needed
+        zoom: 10, // Adjust the zoom level as needed
       }, { duration: 1000 });
       Alert.alert('Location fetched', `Latitude: ${latitude}, Longitude: ${longitude}`);
     } catch (error) {
