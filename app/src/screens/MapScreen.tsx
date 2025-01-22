@@ -119,7 +119,7 @@ const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height 
               <Marker
                 key={index}
                 coordinate={destination}
-                title={`${index + 2}: Destination`}
+                title={`Destination : ${index + 1}`}
                 description={`This is destination ${index + 1}`}
               />
             ))}
@@ -130,9 +130,11 @@ const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height 
                 destination={destinations[destinations.length - 1]}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
-                strokeColor="blue"
+                strokeColor="#4A90E2"
               />
             )}
+          
+
         </MapView>
         <Animated.View style={[styles.inputContainer, { height: dialogHeight }]}>
           {isDialogVisible && (
@@ -171,15 +173,16 @@ const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height 
                 title="Add Destination"
                 onPress={fetchDestinationCoordinates}
               />
+              
             </View>
           )}
         </Animated.View>
         <TouchableOpacity
-          style={styles.toggleButton}
-          onPress={toggleDialog}
-        >
-          <FontAwesome6 name={isDialogVisible ? "chevron-up" : "chevron-down"} size={24} color="black" />
-        </TouchableOpacity>
+      style={styles.toggleButton}
+      onPress={toggleDialog}
+    >
+      <FontAwesome6 name={isDialogVisible ? "chevron-up" : "chevron-down"} size={24} color="black" />
+    </TouchableOpacity>
         <TouchableOpacity
           style={styles.locationButton}
           onPress={getCurrentLocation}
@@ -202,14 +205,16 @@ const styles = StyleSheet.create({
   mapStyle: {
     ...StyleSheet.absoluteFillObject,
   },
-  toggleButton: { position: 'absolute',
-    top: 5, 
-    right: 10,
+  toggleButton: {
     backgroundColor: '#D8BFD8',
-    borderRadius: 20, 
-    padding: 10, 
+    borderRadius: 20,
+    padding: 10,
     elevation: 5,
-},
+    alignSelf: 'center',
+    marginTop: 10,
+  },
+
+  
   inputContainer: {
     position: 'absolute',
     top: 10,
@@ -251,9 +256,5 @@ disabledButton: {
     borderRadius: 50,
     padding: 10,
     elevation: 5,
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    marginLeft: 10,
   },
 });
