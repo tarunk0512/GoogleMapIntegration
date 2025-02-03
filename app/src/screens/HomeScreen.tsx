@@ -1,8 +1,12 @@
+import { useNavigation, useRoute} from "@react-navigation/native";
+
 // HomeScreen.tsx
 import React from 'react';
 import { View, Button, StyleSheet } from 'react-native';
 
-const HomeScreen: React.FC = ({ navigation }) => {
+const HomeScreen: React.FC = () => {
+    const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
       <Button
