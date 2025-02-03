@@ -89,14 +89,28 @@ const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height 
   useEffect(() => {
     getCurrentLocation();
   }, []);
-  const moveDestination = (fromIndex: number, toIndex: number) => 
-    { const newInputs = [...destinationInputs]; 
+  const showAlert = () => {
+    Alert.alert('Error', 'Please enter a valid destination.');
+  };
+  
+  const moveDestination = (fromIndex: number, toIndex: number) => {
+    if (!isMoveButtonEnabled(fromIndex) || !isMoveButtonEnabled(toIndex)) {
+        showAlert();
+        return;
+      
+    }
+        const newInputs = [...destinationInputs]; 
         const newDestinations = [...destinations]; 
         const input = newInputs.splice(fromIndex, 1)[0]; 
         const destination = newDestinations.splice(fromIndex, 1)[0]; 
         newInputs.splice(toIndex, 0, input); newDestinations.splice(toIndex, 0, destination); 
         setDestinationInputs(newInputs); setDestinations(newDestinations); 
     };
+    const isMoveButtonEnabled = (index) => {
+        return destinationInputs[index].trim() !== '';
+      };
+      
+      
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -106,12 +120,14 @@ const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height 
           style={styles.mapStyle}
           region={region}
           onRegionChangeComplete={setRegion}
+          rotateEnabled={true} // Add this prop to enable rotation
         >
           {origin && (
             <Marker
               coordinate={origin}
-              title={'Origin'}
-              description={'This is the starting point'}>
+              title={'Current Location'}
+              //description={'Current Location'}
+              >
                 <CustomMarker source={require('./../../../assets/current_location_marker.png')} />
               </Marker>            
           )}
@@ -154,14 +170,14 @@ const dialogHeight = useRef(new Animated.Value(200)).current; // Initial height 
                   <View style={styles.buttonGroup}>
                     <TouchableOpacity
                       onPress={() => moveDestination(index, Math.max(0, index - 1))}
-                      disabled={index === 0}
+                      disabled={index === 0 || !isMoveButtonEnabled(index)}
                       style={[styles.moveButton, index === 0 && styles.disabledButton]}
                     >
                       <FontAwesome6 name="arrow-up" size={16} color="black" />
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => moveDestination(index, Math.min(destinationInputs.length - 1, index + 1))}
-                      disabled={index === destinationInputs.length - 1}
+                      disabled={index === destinationInputs.length - 1 || !isMoveButtonEnabled(index)}
                       style={[styles.moveButton, index === destinationInputs.length - 1 && styles.disabledButton]}
                     >
                       <FontAwesome6 name="arrow-down" size={16} color="black" />
